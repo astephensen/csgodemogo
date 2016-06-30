@@ -14,6 +14,16 @@ func main() {
 	}
 
 	demofile := csgodemogo.Open(os.Args[1])
+
+	demofile.GameEventEmitter = func(gameEvent interface{}) {
+		switch gameEvent.(type) {
+		case csgodemogo.GameEventRoundStart:
+			fmt.Println("Round Started", gameEvent)
+		case csgodemogo.GameEventRoundEnd:
+			fmt.Println("Round Ended")
+		}
+	}
+
 	demofile.Header.PrintInfo()
 	for 1 == 1 {
 		demofile.GetFrame()

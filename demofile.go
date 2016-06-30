@@ -14,6 +14,8 @@ type demoFile struct {
 	frame         int32
 	stream        *demoStream
 	gameEventList cstrikeproto.CSVCMsg_GameEventList
+	// Emitter Functions
+	GameEventEmitter func(gameEvent interface{})
 }
 
 func Open(path string) *demoFile {
@@ -101,23 +103,14 @@ func (demo *demoFile) ParseProtobufPacket(length int) {
 				}
 				demo.gameEventList.PrintEventTable()
 
-			// Parse game events.
+			// Parse game events into a user friendly version.
 			case cstrikeproto.SVC_Messages_svc_GameEvent:
-				gameEvent := cstrikeproto.CSVCMsg_GameEvent{}
-				err := proto.Unmarshal(buffer, &gameEvent)
-				if err != nil {
-					panic(err)
-				}
-
-				eventDescriptor := demo.gameEventList.GetEventDescriptor(gameEvent.GetEventid())
-				eventName := eventDescriptor.GetName()
-				if eventName == "round_start" || eventName == "round_end" {
-					fmt.Println(eventName)
-					for eventKeyIndex, eventKey := range gameEvent.Keys {
-						fmt.Printf("- %s: %s\n", eventDescriptor.Keys[eventKeyIndex].GetName(), eventKey.String())
+				if demo.GameEventEmitter != nil {
+					gameEvent := ParseGameEvent(&demo.gameEventList, buffer)
+					if gameEvent != nil {
+						demo.GameEventEmitter(gameEvent)
 					}
 				}
-
 			}
 
 		} else {
