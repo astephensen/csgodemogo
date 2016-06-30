@@ -9,10 +9,11 @@ import (
 )
 
 type demoFile struct {
-	Header demoHeader
-	tick   int32
-	frame  int32
-	stream *demoStream
+	Header        demoHeader
+	tick          int32
+	frame         int32
+	stream        *demoStream
+	gameEventList cstrikeproto.CSVCMsg_GameEventList
 }
 
 func Open(path string) *demoFile {
@@ -92,39 +93,30 @@ func (demo *demoFile) ParseProtobufPacket(length int) {
 
 			switch svcMessage {
 
-			case cstrikeproto.SVC_Messages_svc_ServerInfo:
-				message := cstrikeproto.CSVCMsg_ServerInfo{}
-				err := proto.Unmarshal(buffer, &message)
-				if err != nil {
-					panic(err)
-				}
-				fmt.Println(message.String())
-
+			// Parse the game event table.
 			case cstrikeproto.SVC_Messages_svc_GameEventList:
-				message := cstrikeproto.CSVCMsg_GameEventList{}
-				err := proto.Unmarshal(buffer, &message)
+				err := proto.Unmarshal(buffer, &demo.gameEventList)
 				if err != nil {
 					panic(err)
 				}
-				fmt.Println(message.String())
+				demo.gameEventList.PrintEventTable()
 
+			// Parse game events.
 			case cstrikeproto.SVC_Messages_svc_GameEvent:
-				message := cstrikeproto.CSVCMsg_GameEvent{}
-				err := proto.Unmarshal(buffer, &message)
+				gameEvent := cstrikeproto.CSVCMsg_GameEvent{}
+				err := proto.Unmarshal(buffer, &gameEvent)
 				if err != nil {
 					panic(err)
 				}
-				fmt.Println(message.String())
 
-				/*
-					case cstrikeproto.SVC_Messages_svc_PacketEntities:
-						message := cstrikeproto.CSVCMsg_PacketEntities{}
-						err := proto.Unmarshal(buffer, &message)
-						if err != nil {
-							panic(err)
-						}
-						fmt.Println(message.String())
-				*/
+				eventDescriptor := demo.gameEventList.GetEventDescriptor(gameEvent.GetEventid())
+				eventName := eventDescriptor.GetName()
+				if eventName == "round_start" || eventName == "round_end" {
+					fmt.Println(eventName)
+					for eventKeyIndex, eventKey := range gameEvent.Keys {
+						fmt.Printf("- %s: %s\n", eventDescriptor.Keys[eventKeyIndex].GetName(), eventKey.String())
+					}
+				}
 
 			}
 
