@@ -10,12 +10,14 @@ import (
 
 type demoFile struct {
 	Header        demoHeader
-	tick          int32
-	frame         int32
+	Tick          int32
+	Frame         int32
+	Finished      bool
 	stream        *demoStream
 	gameEventList cstrikeproto.CSVCMsg_GameEventList
-	// Emitter Functions
-	GameEventEmitter func(gameEvent interface{})
+	// Emitter Functions - these should probably be channels
+	GameEventListEmitter func(gameEventList *cstrikeproto.CSVCMsg_GameEventList)
+	GameEventEmitter     func(gameEvent interface{})
 }
 
 func Open(path string) *demoFile {
@@ -27,8 +29,9 @@ func Open(path string) *demoFile {
 	demo := demoFile{}
 	demo.stream = DemoStream(file)
 	demo.Header = DemoHeader(demo.stream)
-	demo.tick = 0
-	demo.frame = 0
+	demo.Tick = 0
+	demo.Frame = 0
+	demo.Finished = false
 
 	return &demo
 }
@@ -58,7 +61,7 @@ func (demo *demoFile) GetFrame() {
 		demo.stream.Skip(int64(dataLength))
 
 	case CommandStop:
-		fmt.Println("Stop!")
+		demo.Finished = true
 
 	case CommandCustomData:
 		fmt.Println("Custom Data")
@@ -101,7 +104,9 @@ func (demo *demoFile) ParseProtobufPacket(length int) {
 				if err != nil {
 					panic(err)
 				}
-				demo.gameEventList.PrintEventTable()
+				if demo.GameEventListEmitter != nil {
+					demo.GameEventListEmitter(&demo.gameEventList)
+				}
 
 			// Parse game events into a user friendly version.
 			case cstrikeproto.SVC_Messages_svc_GameEvent:

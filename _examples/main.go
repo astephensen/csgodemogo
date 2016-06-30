@@ -25,7 +25,9 @@ func main() {
 	}
 
 	demofile.Header.PrintInfo()
-	for 1 == 1 {
+	for demofile.Finished == false {
 		demofile.GetFrame()
 	}
+
+	fmt.Println("Finished parsing demo file!")
 }
