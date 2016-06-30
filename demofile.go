@@ -47,16 +47,14 @@ func (demo *demoFile) GetFrame() {
 		demo.ParseProtobufPacket(dataLength)
 
 	case CommandSyncTick:
-		fmt.Println("Sync Tick")
+		// Sync ticks will be ignored.
 
 	case CommandConsoleCommand:
-		fmt.Println("Console Command")
 
 	case CommandUserCommand:
-		fmt.Println("User Command")
 
 	case CommandDataTables:
-		fmt.Println("Data Tables")
+		// Skip over data tables.
 		dataLength := demo.stream.GetInt()
 		demo.stream.Skip(int64(dataLength))
 
@@ -64,10 +62,9 @@ func (demo *demoFile) GetFrame() {
 		demo.Finished = true
 
 	case CommandCustomData:
-		fmt.Println("Custom Data")
 
 	case CommandStringTables:
-		fmt.Println("String Tables")
+		// Skip over string tables.
 		dataLength := demo.stream.GetInt()
 		demo.stream.Skip(int64(dataLength))
 	}
