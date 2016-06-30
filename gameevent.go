@@ -1,14 +1,3 @@
-/*
- * Notes on event key types:
- * 1 = string
- * 2 =
- * 3 = long (int32)
- * 4 = short (int32)
- * 5 = byte (int32)
- * 6 =
- * 7 =
- */
-
 package csgodemogo
 
 import (
@@ -19,38 +8,6 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
-type GameEvent struct {
-}
-
-type GameEventRoundStart struct {
-	TimeLimit int
-	FragLimit int
-	Objective string
-}
-
-type GameEventRoundEnd struct {
-	Winner      int
-	Reason      int
-	Message     string
-	Legacy      int
-	PlayerCount int
-}
-
-type GameEventPlayerDeath struct {
-	UserID                  int
-	Attacker                int
-	Assister                int
-	Weapon                  string
-	WeaponItemID            string
-	WeaponFauxItemID        string
-	WeaponOriginalOwnerXUID string
-	Headshot                bool
-	Dominated               int
-	Revenge                 int
-	Penetrated              int
-	NoReplay                bool
-}
-
 func ParseGameEvent(gameEventList *cstrikeproto.CSVCMsg_GameEventList, buffer []byte) interface{} {
 	message := cstrikeproto.CSVCMsg_GameEvent{}
 	err := proto.Unmarshal(buffer, &message)
@@ -58,23 +15,17 @@ func ParseGameEvent(gameEventList *cstrikeproto.CSVCMsg_GameEventList, buffer []
 		panic(err)
 	}
 
-	var gameEvent interface{}
 	eventDescriptor := gameEventList.GetEventDescriptor(message.GetEventid())
 	eventName := eventDescriptor.GetName()
-	switch eventName {
-	case "round_start":
-		gameEvent = GameEventRoundStart{}
-	case "round_end":
-		gameEvent = GameEventRoundEnd{}
-	case "player_death":
-		gameEvent = GameEventPlayerDeath{}
-	default:
-		return nil
-		// Unknown event. Log info
+	gameEvent := GameEventFromName(eventName)
+
+	// Unknown event. Log info
+	if gameEvent == nil {
 		fmt.Println(eventName)
 		for eventKeyIndex, eventKey := range message.Keys {
 			fmt.Printf("- %s: %s\n", eventDescriptor.Keys[eventKeyIndex].GetName(), eventKey.String())
 		}
+		return nil
 	}
 
 	// Use reflection to load the keys into the struct.
