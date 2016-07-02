@@ -1,7 +1,6 @@
 package csgodemogo
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/astephensen/csgodemogo/cstrikeproto"

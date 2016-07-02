@@ -36,26 +36,20 @@ func ParseGameEvent(gameEventList *cstrikeproto.CSVCMsg_GameEventList, buffer []
 		// Get the key from the event.
 		eventValue := message.Keys[fieldIndex]
 		switch eventValue.GetType() {
-		// 1 = String
-		case 1:
+		case 1: // string
 			valueField.SetString(eventValue.GetValString())
-		// 2 = float (float32)
-		case 2:
+		case 2: // float (float32)
 			valueField.SetFloat(float64(eventValue.GetValFloat()))
-		// 3 = long (int32)
-		case 3:
+		case 3: // long (int32)
 			valueField.SetInt(int64(eventValue.GetValLong()))
-		// 4 = short (int32)
-		case 4:
+		case 4: // short (int32)
 			valueField.SetInt(int64(eventValue.GetValShort()))
-		// 5 = byte (int32)
-		case 5:
+		case 5: // byte (int32)
 			valueField.SetInt(int64(eventValue.GetValByte()))
-		// 6 = bool
-		case 6:
+		case 6: // bool
 			valueField.SetBool(eventValue.GetValBool())
-		// 7 = Binary Data? (???)
-		case 7:
+		case 7: // binary data - not sure about this one
+			valueField.SetBytes(eventValue.GetValWstring())
 		}
 	}
 
